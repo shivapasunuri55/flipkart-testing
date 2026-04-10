@@ -114,6 +114,41 @@ export class ActionUtils {
         await page.keyboard.press(key);
     }
 
+    /**
+     * Press Enter on a locator (focuses element first).
+     */
+    static async pressEnterOn(input: string | Locator, options: any = {}): Promise<void> {
+        const locator = await this.getLocatorWithStableAndVisibleOptions(input, options);
+        await locator.focus();
+        await locator.press('Enter');
+    }
+
+    /**
+     * Click element only if it is visible.
+     * Returns true if click happened, false otherwise.
+     */
+    static async clickIfVisible(input: string | Locator, options: any = {}): Promise<boolean> {
+        const page = options.page;
+        if (!page) {
+            throw new Error('Page is required for locator operations');
+        }
+
+        const locator = typeof input === 'string' ? page.locator(input) : input;
+        const isVisible = await locator.isVisible().catch(() => false);
+        if (!isVisible) return false;
+
+        await locator.click(options);
+        return true;
+    }
+
+    /**
+     * Wait for page to be ready (DOM loaded + network idle).
+     */
+    static async waitForPageReady(options: { page: Page; timeout?: number }): Promise<void> {
+        const { page, timeout } = options;
+        await page.waitForLoadState('domcontentloaded', { timeout });
+        await page.waitForLoadState('networkidle', { timeout });
+    }
 
     /**
      * Clear input field
